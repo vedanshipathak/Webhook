@@ -30,12 +30,11 @@ app.get("/get-symbols", async (req, res) => {
 
     const data = response.data;
     const symbols = extractTopSymbols(exchange, data);
-
-    console.log(`✅ Symbols fetched for ${exchange}:`, symbols.slice(0, 5));
+    console.log(`Symbols fetched for ${exchange}:`, symbols.slice(0, 5));
 
     return res.json({ symbols: symbols.slice(0, 5).join(", ") });
   } catch (err) {
-    console.error(`❌ Error fetching ${url}:`, err.message);
+    console.error(` Error fetching ${url}:`, err.message);
     if (err.response) {
       console.error("Response status:", err.response.status);
       console.error("Response data:", err.response.data);
