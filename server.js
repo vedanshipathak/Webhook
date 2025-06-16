@@ -78,7 +78,8 @@ app.get("/get-price", async (req, res) => {
   } else if (exchange === "okx") {
     url = `https://www.okx.com/api/v5/market/ticker?instId=${symbol}`;
   } else if (exchange === "bybit") {
-    url = `https://api.scraperapi.com/?api_key=${process.env.SCRAPER_API_KEY}&url=https://api.bybit.com/v2/public/tickers?symbol=${symbol}`;
+    url = `https://api.scraperapi.com/?api_key=${process.env.SCRAPER_API_KEY}&url=https://api.bybit.com/v5/market/tickers?category=spot&symbol=${symbol}`;
+
   } else if (exchange === "deribit") {
     url = `https://www.deribit.com/api/v2/public/ticker?instrument_name=${symbol}`;
   } else {
@@ -94,11 +95,16 @@ app.get("/get-price", async (req, res) => {
 
     const data = response.data;
 
-    let price;
-    if (exchange === "binance") price = data.price;
-    else if (exchange === "okx") price = data.data[0]?.last;
-    else if (exchange === "bybit") price = data.result[0]?.last_price;
-    else if (exchange === "deribit") price = data.result?.last_price;
+        let price;
+      if (exchange === "binance") {
+        price = data.price;
+      } else if (exchange === "okx") {
+        price = data.data?.[0]?.last;
+      } else if (exchange === "bybit") {
+        price = data.result?.list?.[0]?.lastPrice;
+      } else if (exchange === "deribit") {
+        price = data.result?.last_price;
+      }
 
     return res.json({ symbol, price });
 
