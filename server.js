@@ -1,18 +1,20 @@
 const express = require('express');
 const axios = require('axios');
+require('dotenv').config();
+
 const app = express();
 
-// Main route for symbol fetching
 app.get("/get-symbols", async (req, res) => {
   const exchange = req.query.exchange_name?.toLowerCase();
+  const scraperKey = process.env.SCRAPER_API_KEY;
 
   let url = "";
   if (exchange === "binance") {
-    url = "https://api.binance.com/api/v3/exchangeInfo";
+    url = `https://api.scraperapi.com/?api_key=${scraperKey}&url=https://api.binance.com/api/v3/exchangeInfo`;
   } else if (exchange === "okx") {
     url = "https://www.okx.com/api/v5/public/instruments?instType=SPOT";
   } else if (exchange === "bybit") {
-    url = "https://api.bybit.com/v5/market/instruments-info?category=spot";
+    url = `https://api.scraperapi.com/?api_key=${scraperKey}&url=https://api.bybit.com/v5/market/instruments-info?category=spot`;
   } else if (exchange === "deribit") {
     url = "https://www.deribit.com/api/v2/public/get_instruments?currency=BTC&kind=option";
   } else {
@@ -20,7 +22,7 @@ app.get("/get-symbols", async (req, res) => {
   }
 
   try {
-    console.log(`📡 Fetching from: ${url}`);
+    console.log(`Fetching symbols from: ${exchange}`);
     const response = await axios.get(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0',
@@ -30,24 +32,26 @@ app.get("/get-symbols", async (req, res) => {
 
     const data = response.data;
     const symbols = extractTopSymbols(exchange, data);
-    console.log(`Symbols fetched for ${exchange}:`, symbols.slice(0, 5));
+
+    console.log(`Symbols received from ${exchange}:`, symbols.slice(0, 5));
 
     return res.json({ symbols: symbols.slice(0, 5).join(", ") });
+
   } catch (err) {
-    console.error(` Error fetching ${url}:`, err.message);
+    console.error(`Failed to fetch symbols from ${exchange}.`);
+
     if (err.response) {
-      console.error("Response status:", err.response.status);
-      console.error("Response data:", err.response.data);
+      console.error(`Response status: ${err.response.status}`);
     } else if (err.request) {
-      console.error("No response received:", err.request);
+      console.error("No response received.");
     } else {
-      console.error("Unexpected error:", err);
+      console.error(`Unexpected error: ${err.message}`);
     }
-    return res.status(500).json({ error: `Failed to fetch from ${exchange}` });
+
+    return res.status(500).json({ error: `Unable to fetch symbols from ${exchange}` });
   }
 });
 
-// Function to extract top 5 symbols per exchange
 function extractTopSymbols(exchange, data) {
   switch (exchange) {
     case "binance":
@@ -64,4 +68,4 @@ function extractTopSymbols(exchange, data) {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
